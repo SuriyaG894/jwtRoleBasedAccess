@@ -27,6 +27,23 @@ public class JWTUtils {
     private String secret = "This is secret key which is gonn@ be used @s sccret###";
     private SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
+
+    public String generateRefreshToken(String username){
+
+        Optional<User> user = userRepository.findByUsername(username);
+        Set<Role> roles = user.get().getRole();
+
+        return Jwts
+                .builder()
+                .signWith(secretKey)
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis()+1000*60*2))
+                .claim("email",username)
+                .claim("roles",roles.stream().map(Role::getName).collect(Collectors.joining(",")))
+                .compact();
+    }
+
     public String generateToken(String username){
 
         Optional<User> user = userRepository.findByUsername(username);
@@ -37,7 +54,7 @@ public class JWTUtils {
                 .signWith(secretKey)
                 .subject(username)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()+1000*60*60))
+                .expiration(new Date(System.currentTimeMillis()+1000*60))
                 .claim("email",username)
                 .claim("roles",roles.stream().map(Role::getName).collect(Collectors.joining(",")))
                 .compact();

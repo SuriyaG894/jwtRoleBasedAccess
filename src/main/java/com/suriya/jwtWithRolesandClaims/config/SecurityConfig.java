@@ -52,9 +52,9 @@ public class SecurityConfig {
                         .csrf(customizer->customizer.disable())
                         .httpBasic(Customizer.withDefaults())
                         .authorizeHttpRequests(
-                                request->request.requestMatchers("/login","/register").permitAll()
+                                request->request.requestMatchers("/login","/register","/refresh").permitAll()
                                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                                        .requestMatchers("/user/**").hasAnyRole("ROLE","ADMIN")
+                                        .requestMatchers("/user/**").hasAnyRole("USER","ADMIN")
                                         .anyRequest().authenticated()
                         )
                         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

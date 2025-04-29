@@ -1,5 +1,6 @@
 package com.suriya.jwtWithRolesandClaims.service;
 
+import com.suriya.jwtWithRolesandClaims.dto.JwtResponse;
 import com.suriya.jwtWithRolesandClaims.dto.LoginDto;
 import com.suriya.jwtWithRolesandClaims.dto.RegisterDto;
 import com.suriya.jwtWithRolesandClaims.entity.Role;
@@ -56,7 +57,7 @@ public class AuthService {
         return new ResponseEntity<>("User registered Successfully",HttpStatus.CREATED);
     }
 
-    public ResponseEntity<String> login(LoginDto loginDto){
+    public ResponseEntity<?> login(LoginDto loginDto){
         try{
             System.out.println(loginDto.getUsername()+" - "+loginDto.getPassword() );
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsername(),loginDto.getPassword()));
@@ -64,7 +65,25 @@ public class AuthService {
         catch(Exception e){
             return new ResponseEntity<>("Invalid Username and Password"+e,HttpStatus.UNAUTHORIZED);
         }
-        return new ResponseEntity<>(jwtUtils.generateToken(loginDto.getUsername()), HttpStatus.OK);
+        String accessToken = jwtUtils.generateToken(loginDto.getUsername());
+        String refreshToken = jwtUtils.generateRefreshToken(loginDto.getUsername());
+        JwtResponse response = new JwtResponse(accessToken,refreshToken);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    public ResponseEntity<?> validateRefreshToken(String token) {
+        String username = jwtUtils.extractUsername(token);
+        if(jwtUtils.isTokenExpired(token)){
+            return new ResponseEntity<>("Token Expired. Login again ",HttpStatus.UNAUTHORIZED);
+        }
+        else {
+            userRepository.findByUsername(username);
+            String accessToken = jwtUtils.generateToken(username);
+            String refreshToken = jwtUtils.generateRefreshToken(username);
+            JwtResponse response = new JwtResponse(accessToken,refreshToken);
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+    }
+
 
 }
